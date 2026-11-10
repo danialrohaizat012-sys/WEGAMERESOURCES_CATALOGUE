@@ -6,18 +6,22 @@ Katalog borong untuk WeGame Resources: konsol, controller, aksesori dan alat gan
 
 ## Ciri-ciri
 
-**Untuk pelanggan**
-- Kategori: Konsol, Controller, Aksesori, Alat Ganti
-- Carian (nama, SKU, jenama, platform) dan penapis platform, jenama, status stok
-- Paparan grid atau senarai
-- Butiran produk: harga tier ikut kuantiti, SRP dan anggaran margin, spesifikasi, MOQ
-- Senarai sebut harga: pilih kuantiti, salin teks atau hantar terus ke WhatsApp syarikat
+**Untuk pelanggan (Katalog)**
+- Hero dengan carian besar, carian popular dan jubin kategori
+- Penapis di sisi: kategori, platform, jenama, keadaan, boleh ditempah (panel bawah di telefon)
+- Kad produk dengan ilustrasi automatik ikut jenis produk dan warna jenama, harga asas, harga tier terbaik dan % jimat
+- Tambah ke sebut harga terus dari kad, kemudian ubah kuantiti di kad yang sama
+- Butiran produk: tier harga boleh diklik, kalkulator jumlah dan penjimatan, petunjuk “tambah X lagi untuk harga lebih murah”, produk berkaitan, pautan terus (`#produk-<id>`)
+- Senarai sebut harga: bar terapung, butang naikkan ke tier seterusnya, ringkasan penjimatan, maklumat pelanggan, salin mesej atau hantar terus ke WhatsApp
+- Tema cerah / gelap, kekunci `/` untuk carian, paparan grid atau senarai
 
-**Untuk staf (butang “Urus”)**
-- Tambah, edit, salin dan padam produk (dengan muat naik gambar, dikecilkan automatik)
-- Tetapan syarikat: maklumat hubungan, WhatsApp, terma borong, tunjuk/sembunyi harga dan stok
-- Import CSV dan salin CSV (untuk Excel / Google Sheets)
-- Buang data contoh, atau reset kepada data contoh
+**Untuk staf (Inventori, `#inventori`)**
+- KPI: nilai stok, ada stok, stok rendah, habis stok (boleh diklik untuk tapis)
+- Jadual inventori: susun ikut lajur, ubah stok terus dengan butang +/−
+- Tambah / edit / salin / padam produk dengan pratonton kad secara langsung
+- Muat naik gambar (dikecilkan automatik)
+- Tetapan syarikat: hubungan, WhatsApp, terma borong, tunjuk/sembunyi harga dan stok
+- Import CSV dan salin CSV; buang data contoh atau reset demo
 
 ## Struktur
 
