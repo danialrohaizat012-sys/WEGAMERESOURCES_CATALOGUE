@@ -67,10 +67,19 @@ sku,name,brand,category,platforms,condition,stock,unit,moq,min1,price1,min2,pric
 
 ## Jenama
 
+**Logo:** wordmark “WEGAME.” dilukis sendiri (huruf blok condong, bukan fon), dengan titik biru sebagai tanda tangan dan “RESOURCES” di bawah. Fail dalam `brand/`:
+
+| Fail | Guna |
+|---|---|
+| `logo-wordmark.svg` / `.png` | Latar cerah (utama) |
+| `logo-wordmark-white.svg` / `.png` | Latar gelap |
+| `logo-wordmark-mono.svg` / `.png` | Satu warna (cop, invois, cetakan) |
+| `logo-mark.svg` / `.png` | Ikon aplikasi, favicon, avatar media sosial |
+| `logo-mark-dark.svg` / `.png` | Ikon atas latar gelap |
+
 | Token | Cerah | Gelap |
 |---|---|---|
-| Biru utama | `#2347E0` | `#5D7DFF` |
-| Amber aksen | `#F5A524` | `#FFB940` |
-| Dakwat | `#0F1B2D` | `#E7ECF6` |
+| Dakwat | `#0F1420` | `#E9ECF2` |
+| Biru jenama | `#1F44E0` | `#6684FF` |
 
-Fon: Chakra Petch (tajuk / logo), IBM Plex Sans (teks), JetBrains Mono (SKU).
+Fon: Archivo (tajuk & angka harga), IBM Plex Sans (teks), IBM Plex Mono (SKU).

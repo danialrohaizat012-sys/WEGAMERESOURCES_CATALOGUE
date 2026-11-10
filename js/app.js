@@ -92,9 +92,8 @@ function tint(brand){
 function ill(kind){ return '<svg class="ill" viewBox="0 0 160 120" aria-hidden="true">'+(ILL[kind]||ILL.box)+'</svg>'; }
 function media(p, cls, inner){
   const body = p.image ? '<img src="'+esc(p.image)+'" alt="'+esc(p.name)+'" loading="lazy">' : ill(illKind(p));
-  return '<div class="media '+(cls||"")+'" style="--tint:'+tint(p.brand)+'">'+body+(inner||"")+'</div>';
+  return '<div class="media '+(cls||"")+'">'+body+(inner||"")+'</div>';
 }
-
 /* ============ state ============ */
 let data = {settings:Object.assign({}, (window.WG_SEED||{}).settings), products:[]};
 const ui = {route:"catalog", loaded:false, cat:"", q:"", plats:new Set(), brands:new Set(), conds:new Set(), instock:false, sort:"featured", view:"grid",
@@ -166,10 +165,8 @@ function applyTheme(){
   const t = ls.get("wg-theme", "");
   if(t) document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme");
   const dark = t ? t==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-  $("#btn-theme").innerHTML = dark ? ICON.sun : ICON.moon;
-  $("#btn-theme").setAttribute("aria-label", dark ? "Tukar ke tema cerah" : "Tukar ke tema gelap");
+  $("#btn-theme").innerHTML = (dark ? ICON.sun : ICON.moon) + (dark ? "Tema cerah" : "Tema gelap");
 }
-
 /* ============ routing ============ */
 function readRoute(){
   const h = location.hash.replace(/^#/,"");
@@ -214,26 +211,38 @@ function clearFilters(){ ui.plats.clear(); ui.brands.clear(); ui.conds.clear(); 
 
 /* ============ render: header & hero ============ */
 function renderHeader(){
-  $("#nav-cat").setAttribute("aria-current", ui.route==="catalog" ? "page" : "false");
   $("#nav-inv").setAttribute("aria-current", ui.route==="inventory" ? "page" : "false");
   $("#quote-count").textContent = quote.length;
+  $("#quote-count").hidden = !quote.length;
+  const t = quoteTotals();
+  $("#quote-sub").textContent = quote.length ? (showPrices() && t.total ? rm(t.total) : quote.length+" item") : "Senarai";
   $("#view-catalog").hidden = ui.route!=="catalog";
   $("#view-inventory").hidden = ui.route!=="inventory";
+  const s = S(), wa = (s.whatsapp||"").replace(/\D/g,"");
+  $("#u-contact").innerHTML = wa ? 'WhatsApp jualan: <a href="https://wa.me/'+wa+'" target="_blank" rel="noopener">'+esc(s.whatsapp)+'</a>' : (s.phone ? 'Jualan: <span class="num">'+esc(s.phone)+'</span>' : (s.hours ? esc(s.hours) : ""));
+  const counts = {}; data.products.forEach(p=>{ counts[p.category] = (counts[p.category]||0)+1; });
+  $("#catnav").innerHTML = CATS.map(c=>'<button type="button" data-act="cat" data-cat="'+c.id+'" aria-pressed="'+(ui.route==="catalog" && ui.cat===c.id)+'">'+esc(c.id?c.label:"Semua produk")+' <span class="c">'+(c.id?(counts[c.id]||0):data.products.length)+'</span></button>').join("") + '<span class="upd">Senarai harga dikemas kini <b class="num">'+fmtDate(s.updated)+'</b></span>';
+  const qc = $("#q-cat");
+  qc.innerHTML = CATS.map(c=>'<option value="'+c.id+'"'+(ui.cat===c.id?" selected":"")+'>'+esc(c.id?c.label:"Semua kategori")+'</option>').join("");
 }
 function renderHero(){
   const s = S(), ps = data.products;
-  $("#hero-tag").textContent = "Senarai harga dikemas kini " + fmtDate(s.updated);
-  $("#hero-lead").textContent = (s.tagline||"") + " " + ps.length + " SKU daripada " + new Set(ps.map(p=>p.brand)).size + " jenama, sedia untuk peruncit dan kedai repair.";
-  $("#popular").innerHTML = '<span>Popular:</span>' + POPULAR.map(w=>'<button type="button" data-act="popular" data-q="'+esc(w)+'">'+esc(w)+'</button>').join("");
-  const counts = {}; ps.forEach(p=>{ counts[p.category] = (counts[p.category]||0)+1; });
-  const kinds = {konsol:"ps5", controller:"pad", aksesori:"headset", sparepart:"chip"};
-  $("#cat-tiles").innerHTML = CATS.filter(c=>c.id).map(c=>
-    '<button class="cat-tile" data-act="cat" data-cat="'+c.id+'" aria-pressed="'+(ui.cat===c.id)+'"><span class="go">'+ICON.arrow+'</span><div><b>'+esc(c.label)+'</b><span>'+(counts[c.id]||0)+' produk · '+esc(c.blurb)+'</span></div>'+ill(kinds[c.id])+'</button>'
-  ).join("");
-  const instock = ps.filter(p=>p.stock>0).length;
-  $("#trust-stock").textContent = instock + " daripada " + ps.length + " SKU ada stok";
+  const scope = ui.cat ? ps.filter(p=>p.category===ui.cat) : ps;
+  const c = CATS.find(x=>x.id===ui.cat) || CATS[0];
+  $("#crumbs").innerHTML = '<button type="button" data-act="cat" data-cat="">Katalog borong</button>' + (ui.cat ? '<span class="sep">/</span><b>'+esc(c.label)+'</b>' : '') + (ui.q ? '<span class="sep">/</span><b>Carian “'+esc(ui.q)+'”</b>' : '');
+  $("#r-title").textContent = ui.q ? 'Hasil carian “'+ui.q+'”' : (ui.cat ? c.label : "Katalog borong");
+  const leads = {
+    "": "Konsol, controller, aksesori dan alat ganti untuk peruncit, reseller dan kedai repair. Harga borong turun ikut kuantiti setiap SKU.",
+    konsol: "Konsol PlayStation, Nintendo dan Xbox. Set Malaysia dan Asia, baharu dan refurbished.",
+    controller: "Controller rasmi dan pihak ketiga, termasuk model Hall Effect bebas drift.",
+    aksesori: "Kabel, pengecas, pelindung skrin dan aksesori harian dengan MOQ rendah.",
+    sparepart: "Alat ganti untuk kedai repair: analog stick, port HDMI, kipas, bekalan kuasa dan komponen lain."
+  };
+  $("#ph-lead").textContent = ui.q ? (baseFiltered().length+" produk sepadan dengan carian anda.") : leads[ui.cat||""];
+  const inStock = scope.filter(p=>p.stock>0).length;
+  const brands = new Set(scope.map(p=>p.brand)).size;
+  $("#facts").innerHTML = '<div><dt>SKU</dt><dd>'+scope.length+'</dd></div><div><dt>Ada stok</dt><dd>'+inStock+'</dd></div><div><dt>Jenama</dt><dd>'+brands+'</dd></div>';
 }
-
 /* ============ render: filters ============ */
 function filterPanel(){
   const counts = k => { const m = {}; baseFiltered(k).forEach(p=>{ const vals = k==="plat" ? (p.platforms||[]) : k==="brand" ? [p.brand] : k==="cond" ? [p.condition] : [p.category]; vals.forEach(v=>{ m[v]=(m[v]||0)+1; }); }); return m; };
@@ -252,8 +261,8 @@ function filterPanel(){
 function helpBox(){
   const s = S();
   const wa = (s.whatsapp||"").replace(/\D/g,"");
-  return '<div class="side-help"><b>Perlukan harga khas?</b><p>Untuk kuantiti besar atau item yang tiada dalam katalog, hubungi pasukan jualan kami.</p>'+
-    (wa ? '<a class="btn accent sm block" href="https://wa.me/'+wa+'" target="_blank" rel="noopener">'+ICON.chat+'WhatsApp kami</a>' : '<button class="btn accent sm block" data-act="quote">'+ICON.chat+'Buka senarai sebut harga</button>')+'</div>';
+  return '<div class="side-help"><b>Harga untuk kuantiti besar</b><p>Tempahan melebihi tier tertinggi atau item yang tiada dalam katalog? Minta sebut harga khas.</p>'+
+    (wa ? '<a class="btn sm block" href="https://wa.me/'+wa+'" target="_blank" rel="noopener">'+ICON.chat+'WhatsApp jualan</a>' : '<button class="btn sm block" data-act="quote" type="button">Buka senarai sebut harga</button>')+'</div>';
 }
 function renderFilters(){
   const html = filterPanel();
@@ -264,43 +273,38 @@ function renderFilters(){
 
 /* ============ render: cards ============ */
 function priceHTML(p){
-  if(!showPrices() || !tiersOf(p).length) return '<div class="pricing"><div class="price-ask">Harga atas permintaan</div><div class="price-tier" style="color:var(--muted);font-weight:500">Tambah ke senarai untuk sebut harga</div></div>';
-  const t = tiersOf(p), sp = savePct(p);
-  return '<div class="pricing"><div class="price-main"><b>'+rm(basePrice(p))+'</b><span>/ '+esc(p.unit)+'</span></div>'+
-    (t.length>1 && sp ? '<div class="price-tier">'+ICON.down+rm(bestPrice(p))+' @ '+t[t.length-1].min+'+ <span class="save">−'+sp+'%</span></div>' : '<div class="price-tier" style="color:var(--muted);font-weight:500">Harga tetap</div>')+'</div>';
+  const t = tiersOf(p);
+  if(!showPrices() || !t.length) return '<div class="c-ask">Harga atas permintaan<small>Tambah ke senarai untuk sebut harga</small></div>';
+  const base = t[0].price;
+  return '<table class="c-tiers"><tbody>'+t.map((x,i,a)=>{ const sp = i ? Math.round((1-x.price/base)*100) : 0;
+    return '<tr class="'+(i===a.length-1&&i>0?"best":"")+'"><td>'+x.min+(a[i+1]?'–'+(a[i+1].min-1):'+')+' '+esc(p.unit)+'</td><td>'+(sp?'<span class="sv">−'+sp+'%</span>':'')+rm(x.price)+'</td></tr>'; }).join("")+'</tbody></table>';
 }
 function badges(p){
-  const st = status(p);
-  const cls = p.condition==="Refurbished" ? "refurb" : p.condition==="OEM" ? "oem" : "";
-  return '<div class="badges">'+(showStock() ? '<span class="pill '+st.k+'">'+st.t+'</span>' : '<span></span>')+'<span class="tag '+cls+'">'+esc(p.condition)+'</span></div>';
+  return p.condition && p.condition!=="Baru" ? '<span class="tag cond '+(p.condition==="Refurbished"?"refurb":"oem")+'">'+esc(p.condition)+'</span>' : '';
 }
 function stepperHTML(p, qty, act, cls){
   return '<div class="stepper '+(cls||"")+'"><button type="button" data-act="'+act+'" data-id="'+p.id+'" data-d="-1" aria-label="Kurangkan">−</button><input type="number" inputmode="numeric" min="0" value="'+qty+'" data-act="'+act+'-set" data-id="'+p.id+'" aria-label="Kuantiti '+esc(p.name)+'"><button type="button" data-act="'+act+'" data-id="'+p.id+'" data-d="1" aria-label="Tambah">+</button></div>';
 }
 function cardHTML(p){
-  const q = inQuote(p.id);
+  const q = inQuote(p.id), st = status(p);
   const admin = ui.route==="catalog" && ls.get("wg-staff", false);
-  return '<article class="card'+(admin?" is-admin":"")+'">'+
-    '<button class="media-btn" data-act="open" data-id="'+p.id+'" aria-label="Lihat '+esc(p.name)+'" style="all:unset;cursor:pointer;display:block">'+media(p,"",badges(p))+'</button>'+
-    (admin ? '<div class="card-admin"><button class="btn xs icon" data-act="edit" data-id="'+p.id+'" title="Edit" aria-label="Edit">'+ICON.edit+'</button></div>' : '')+
-    '<div class="card-body"><div class="meta"><span>'+esc(p.brand)+'</span><span class="dot"></span><span class="mono">'+esc(p.sku)+'</span></div>'+
-    '<h3><button data-act="open" data-id="'+p.id+'">'+esc(p.name)+'</button></h3>'+
-    '<div class="chips">'+(p.platforms||[]).slice(0,3).map(x=>'<span class="chip">'+esc(x)+'</span>').join("")+((p.platforms||[]).length>3?'<span class="chip">+'+((p.platforms||[]).length-3)+'</span>':'')+'</div>'+
-    priceHTML(p)+'</div>'+
+  const plats = (p.platforms||[]);
+  return '<article class="card">'+
+    '<button class="card-media" type="button" data-act="open" data-id="'+p.id+'" aria-label="Lihat '+esc(p.name)+'">'+media(p,"",badges(p))+'</button>'+
+    (admin ? '<div class="card-admin"><button class="btn xs icon" type="button" data-act="edit" data-id="'+p.id+'" title="Edit produk" aria-label="Edit produk">'+ICON.edit+'</button></div>' : '')+
+    '<div class="card-body">'+
+      '<div class="c-meta"><span class="c-brand">'+esc(p.brand||"—")+'</span><span class="mono">'+esc(p.sku)+'</span></div>'+
+      '<h3><button type="button" data-act="open" data-id="'+p.id+'">'+esc(p.name)+'</button></h3>'+
+      '<div class="c-sub">'+(showStock()?'<span class="stock '+st.k+'">'+st.t+'</span>':'')+(plats.length?'<span>'+esc(plats.slice(0,3).join(" · "))+(plats.length>3?' +'+(plats.length-3):'')+'</span>':'')+'</div>'+
+      priceHTML(p)+
+    '</div>'+
     '<div class="card-foot">'+
-      (!canBuy(p) ? '<button class="btn sm block" disabled>Habis stok</button>' :
+      (!canBuy(p) ? '<button class="btn sm block" type="button" disabled>Habis stok</button>' :
        q ? stepperHTML(p, q.qty, "qq", "in") :
-       '<div class="moq">MOQ<b class="num">'+p.moq+' '+esc(p.unit)+'</b></div><button class="btn primary sm" data-act="add" data-id="'+p.id+'">'+ICON.plus+'Tambah</button>')+
+       '<div class="moq">MOQ<b class="num">'+p.moq+' '+esc(p.unit)+'</b></div><button class="btn dark sm" type="button" data-act="add" data-id="'+p.id+'">'+ICON.plus+'Sebut harga</button>')+
     '</div></article>';
 }
-function featuredHTML(){
-  if(ui.cat || ui.q || activeCount()) return "";
-  const list = data.products.filter(p=>p.featured && canBuy(p)).slice(0,8);
-  if(!list.length) return "";
-  return '<section class="featured"><div class="fh"><h3>Pilihan minggu ini</h3><span class="eyebrow">'+list.length+' produk</span></div><div class="rail">'+
-    list.map(p=>'<button class="feat" data-act="open" data-id="'+p.id+'">'+media(p)+'<div style="min-width:0"><div class="m">'+esc(p.brand)+' · '+esc(catLabel(p.category))+'</div><b>'+esc(p.name)+'</b><div class="p num">'+(showPrices()&&basePrice(p) ? rm(bestPrice(p)) : '<span style="font-size:14px;color:var(--brand)">Hubungi kami</span>')+'</div>'+(showPrices()&&savePct(p)?'<div class="m" style="color:var(--ok);font-weight:600;margin:0">sehingga −'+savePct(p)+'%</div>':'')+'</div></button>').join("")+
-  '</div></section>';
-}
+function featuredHTML(){ return ""; }
 function chipsHTML(){
   const c = [];
   if(ui.q) c.push('<button class="achip" data-act="rm-q">“'+esc(ui.q)+'”'+ICON.x+'</button>');
@@ -314,9 +318,7 @@ function chipsHTML(){
 }
 function renderResults(){
   const list = sorted(baseFiltered());
-  $("#featured").innerHTML = featuredHTML();
-  $("#r-title").textContent = ui.q ? 'Hasil carian' : catLabel(ui.cat);
-  $("#r-sub").textContent = list.length + " produk" + (ui.q ? ' untuk “'+ui.q+'”' : "") ;
+  $("#r-sub").innerHTML = 'Memaparkan <b>'+list.length+'</b> daripada '+data.products.length+' produk';
   $("#active-chips").innerHTML = chipsHTML();
   $("#active-chips").hidden = !$("#active-chips").innerHTML;
   $("#f-sort").value = ui.sort;
@@ -343,7 +345,7 @@ function renderResults(){
 }
 function renderNotice(){
   const s = S(); let n = "";
-  if(s.sample) n = '<div class="notice" style="margin-bottom:24px">'+ICON.info+'<span>Katalog ini memaparkan <b>data contoh</b>. Harga dan stok bukan angka sebenar.</span></div>';
+  if(s.sample) n = '<div class="notice" style="margin-bottom:16px">'+ICON.info+'<span>Katalog ini memaparkan <b>data contoh</b>. Harga dan stok bukan angka sebenar.</span></div>';
   $("#notice-slot").innerHTML = n;
 }
 
@@ -374,10 +376,9 @@ function renderCartbar(){
   if(!quote.length || open || ui.route!=="catalog"){ slot.innerHTML = ""; document.body.style.paddingBottom = ""; return; }
   const t = quoteTotals();
   const names = quote.map(q=>byId(q.id)).filter(Boolean).map(p=>p.name).join(", ");
-  slot.innerHTML = '<div class="cartbar"><div class="ci"><b>'+quote.length+' item · '+t.units+' unit</b><span>'+esc(names)+'</span></div>'+(showPrices()&&t.total?'<div class="tot">'+rm(t.total)+'</div>':'')+'<button class="btn accent sm" data-act="quote">Lihat senarai'+ICON.arrow+'</button></div>';
-  document.body.style.paddingBottom = "88px";
+  slot.innerHTML = '<div class="cartbar"><div class="wrap"><div class="ci"><b>Senarai sebut harga · '+quote.length+' item, '+t.units+' unit</b><span>'+esc(names)+'</span></div>'+(showPrices()&&t.total?'<div class="tot"><small>Anggaran</small><b>'+rm(t.total)+'</b></div>':'')+'<button class="btn primary" type="button" data-act="quote">Semak &amp; hantar'+ICON.arrow+'</button></div></div>';
+  document.body.style.paddingBottom = "64px";
 }
-
 /* ============ product detail ============ */
 function openProduct(id, fromHash){
   const p = byId(id); if(!p) return;
@@ -411,12 +412,12 @@ function renderProduct(){
         (canBuy(p) ?
           '<div class="calc">'+stepperHTML(p, qty, "pq", "lg")+'<div class="tot">'+(priced?'<small>Jumlah untuk '+qty+' '+esc(p.unit)+' · '+rm(unitPr)+' seunit</small><b>'+rm(total)+'</b>'+(save>0?'<em>Jimat '+rm(save)+' berbanding harga asas</em>':''):'<small>Kuantiti</small><b>'+qty+' '+esc(p.unit)+'</b>')+'</div></div>'+
           (priced && nt ? '<div class="hint">'+ICON.trend+'<span>Tambah <b>'+(nt.min-qty)+' '+esc(p.unit)+'</b> lagi untuk harga <b>'+rm(nt.price)+'</b> seunit.</span></div>' : '')+
-          '<button class="btn primary block" data-act="pd-add" style="height:48px;font-size:15px">'+(q?ICON.check+'Kemas kini senarai sebut harga':ICON.plus+'Tambah ke senarai sebut harga')+'</button>'+
+          '<button class="btn primary block" type="button" data-act="pd-add" style="height:46px;font-size:15px">'+(q?ICON.check+'Kemas kini senarai sebut harga':ICON.plus+'Tambah ke senarai sebut harga')+'</button>'+
           '<div style="font-size:12.5px;color:var(--muted);margin-top:8px;text-align:center">MOQ '+p.moq+' '+esc(p.unit)+(p.srp>0&&priced?' · SRP '+rm(p.srp)+' · margin anggaran <b style="color:var(--ok)">'+Math.round((1-unitPr/p.srp)*100)+'%</b>':'')+'</div>'
-          : '<div class="hint" style="color:var(--bad);background:var(--bad-soft)">'+ICON.info+'Item ini habis stok. Hubungi kami untuk tarikh stok seterusnya.</div>')+
+          : '<div class="hint bad">'+ICON.info+'Item ini habis stok. Hubungi kami untuk tarikh stok seterusnya.</div>')+
         (specs?'<div class="sec-t">Spesifikasi</div><dl class="specs">'+specs+'<dt>MOQ</dt><dd class="num">'+p.moq+' '+esc(p.unit)+'</dd><dt>SKU</dt><dd class="mono">'+esc(p.sku)+'</dd></dl>':'')+
       '</div></div>'+
-      (related.length?'<div class="sec-t">Produk berkaitan</div><div class="related">'+related.map(r=>'<button class="feat" data-act="open" data-id="'+r.id+'">'+media(r)+'<div style="min-width:0"><div class="m">'+esc(r.brand)+'</div><b>'+esc(r.name)+'</b><div class="p num" style="font-size:15px">'+(showPrices()&&basePrice(r)?rm(basePrice(r)):'')+'</div></div></button>').join("")+'</div>':'')+
+      (related.length?'<div class="sec-t">Produk berkaitan</div><div class="related">'+related.map(r=>'<button class="feat" type="button" data-act="open" data-id="'+r.id+'">'+media(r)+'<div class="ft"><div class="m">'+esc(r.brand)+'</div><b>'+esc(r.name)+'</b><div class="p num">'+(showPrices()&&basePrice(r)?rm(basePrice(r)):'')+'</div></div></button>').join("")+'</div>':'')+
     '</div>';
 }
 
@@ -431,7 +432,7 @@ function setQuote(id, qty, silent){
 }
 function bumpCount(){ const c = $("#quote-count"); c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); }
 function refreshQuoteViews(){
-  $("#quote-count").textContent = quote.length;
+  renderHeader();
   if(ui.route==="catalog") renderResults();
   renderCartbar();
   if($("#dlg-quote").open) renderQuote();
@@ -472,7 +473,7 @@ function renderQuote(){
         '<div class="field"><label for="c-area">Lokasi penghantaran</label><input id="c-area" data-cust="area" value="'+esc(c.area||"")+'" placeholder="cth. Shah Alam, Selangor"></div>'+
         '<div class="field full"><label for="c-note">Nota (pilihan)</label><textarea id="c-note" data-cust="note" style="min-height:64px" placeholder="cth. Perlu invois syarikat">'+esc(c.note||"")+'</textarea></div>'+
       '</div><details class="preview"><summary>Pratonton mesej</summary><pre class="qtext" id="q-text">'+esc(quoteText())+'</pre></details></div>'
-      : '<div class="empty" style="border:0;background:none"><div class="eico">'+ICON.box+'</div><h3>Senarai masih kosong</h3><p>Tekan “Tambah” pada mana-mana produk untuk mula membina sebut harga.</p><button class="btn primary" data-act="close">Lihat katalog</button></div>')+'</div>'+
+      : '<div class="empty" style="border:0;background:none"><div class="eico">'+ICON.box+'</div><h3>Senarai masih kosong</h3><p>Tekan “Tambah” pada mana-mana produk untuk mula membina sebut harga.</p><button class="btn dark" type="button" data-act="close">Lihat katalog</button></div>')+'</div>'+
     (quote.length ? '<div class="dlg-foot"><button class="btn ghost danger" data-act="q-clear" style="margin-right:auto">Kosongkan</button><button class="btn" data-act="q-copy">'+ICON.copy+'Salin</button>'+(wa?'<a class="btn primary" id="q-wa" href="https://wa.me/'+wa+'?text='+encodeURIComponent(quoteText())+'" target="_blank" rel="noopener">'+ICON.chat+'Hantar WhatsApp</a>':'')+'</div>' : '');
 }
 function copyText(t, okMsg){
@@ -688,7 +689,7 @@ function renderAll(){
 }
 
 /* ============ events ============ */
-function setQ(v){ ui.q = v.trim(); $("#q-top").value = ui.q; $("#q-hero").value = ui.q; renderFilters(); renderResults(); }
+function setQ(v){ ui.q = v.trim(); $("#q").value = ui.q; renderHero(); renderFilters(); renderResults(); }
 function scrollToResults(){ const el = $("#results-top"); if(el){ const y = el.getBoundingClientRect().top + window.scrollY - 90; window.scrollTo({top:y, behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"}); } }
 function toggleSet(set, v){ set.has(v) ? set.delete(v) : set.add(v); }
 function closestDialog(el){ return el.closest("dialog"); }
@@ -703,14 +704,14 @@ document.addEventListener("click", e=>{
     case "theme": { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"); ls.set("wg-theme", cur==="dark"?"light":"dark"); applyTheme(); break; }
     case "quote": { if($("#dlg-filters").open) $("#dlg-filters").close(); openQuote(); break; }
     case "filters": $("#dlg-filters").showModal(); break;
-    case "cat": { ui.cat = t.dataset.cat; renderHero(); renderFilters(); renderResults(); if(t.classList.contains("cat-tile")) scrollToResults(); break; }
+    case "cat": { ui.cat = t.dataset.cat; if(ui.route!=="catalog"){ location.hash = "katalog"; } renderHeader(); renderHero(); renderFilters(); renderResults(); break; }
     case "plat": toggleSet(ui.plats, t.dataset.v); renderFilters(); renderResults(); break;
     case "cond": toggleSet(ui.conds, t.dataset.v); renderFilters(); renderResults(); break;
     case "brand-chip": ui.brands.delete(t.dataset.v); renderFilters(); renderResults(); break;
     case "instock-chip": ui.instock = false; renderFilters(); renderResults(); break;
     case "clear-group": ui[t.dataset.g].clear(); renderFilters(); renderResults(); break;
     case "clear-filters": clearFilters(); renderFilters(); renderResults(); break;
-    case "reset-all": clearFilters(); ui.cat = ""; setQ(""); renderHero(); break;
+    case "reset-all": clearFilters(); ui.cat = ""; setQ(""); renderHeader(); renderHero(); break;
     case "rm-q": setQ(""); break;
     case "popular": setQ(t.dataset.q); scrollToResults(); break;
     case "view": ui.view = t.dataset.v; ls.set("wg-view", ui.view); renderResults(); break;
@@ -751,6 +752,7 @@ document.addEventListener("change", e=>{
   else if(act==="qq-set"){ const p = byId(t.dataset.id); const v = parseInt(t.value)||0; setQuote(p.id, v>0 ? Math.max(p.moq, v) : 0); }
   else if(act==="pq-set"){ const p = byId(pd.id); pd.qty = Math.max(p.moq, parseInt(t.value)||p.moq); renderProduct(); }
   else if(act==="st-set"){ const p = byId(t.dataset.id); persist(()=>Store.saveProduct(Object.assign(clone(p), {stock:Math.max(0, parseInt(t.value)||0)})), "Stok dikemas kini"); }
+  else if(t.id==="q-cat"){ ui.cat = t.value; renderHeader(); renderHero(); renderFilters(); renderResults(); }
   else if(t.id==="f-sort"){ ui.sort = t.value; renderResults(); }
   else if(t.id==="inv-cat"){ ui.inv.cat = t.value; renderInventory(); }
   else if(t.id==="csv-in"){ if(t.files[0]) importCSV(t.files[0]); t.value = ""; }
@@ -760,21 +762,21 @@ document.addEventListener("change", e=>{
 let qT, invT;
 document.addEventListener("input", e=>{
   const t = e.target;
-  if(t.id==="q-top" || t.id==="q-hero"){ clearTimeout(qT); const v = t.value; qT = setTimeout(()=>{ if(ui.route!=="catalog") location.hash = "katalog"; setQ(v); }, 140); }
+  if(t.id==="q"){ clearTimeout(qT); const v = t.value; qT = setTimeout(()=>{ if(ui.route!=="catalog") location.hash = "katalog"; setQ(v); }, 140); }
   else if(t.id==="inv-q"){ clearTimeout(invT); invT = setTimeout(()=>{ ui.inv.q = t.value; const pos = t.selectionStart; renderInventory(); const n = $("#inv-q"); n.focus(); try{ n.setSelectionRange(pos,pos); }catch(_){} }, 160); }
   else if(t.dataset && t.dataset.cust){ const c = ls.get("wg-cust", {}) || {}; c[t.dataset.cust] = t.value; ls.set("wg-cust", c); const pre = $("#q-text"); if(pre) pre.textContent = quoteText(); const wa = $("#q-wa"); if(wa) wa.href = wa.href.split("?")[0] + "?text=" + encodeURIComponent(quoteText()); }
   else if(t.closest && t.closest("#ed")){ updatePreview(); }
 });
 document.addEventListener("submit", e=>{
   e.preventDefault();
-  if(e.target.id==="hero-form"){ setQ($("#q-hero").value); scrollToResults(); }
+  if(e.target.id==="search-form"){ if(ui.route!=="catalog") location.hash = "katalog"; setQ($("#q").value); scrollToResults(); }
   else if(e.target.id==="ed") saveEditor();
   else if(e.target.id==="st") saveSettings();
 });
 document.addEventListener("keydown", e=>{
   if(e.key==="/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && !document.querySelector("dialog[open]")){
     e.preventDefault(); if(ui.route!=="catalog") location.hash = "katalog";
-    const top = $("#q-top"); (getComputedStyle(top.parentElement).display!=="none" ? top : $("#q-hero")).focus();
+    $("#q").focus();
   }
 });
 $$("dialog").forEach(d=>{
