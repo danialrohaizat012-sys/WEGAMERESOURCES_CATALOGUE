@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Katalog WeGame Resources</title>
+<meta name="description" content="Katalog borong WeGame Resources: konsol, controller, aksesori dan alat ganti gaming.">
+<meta name="theme-color" content="#2347E0">
+<link rel="icon" type="image/svg+xml" href="brand/logo-mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app"></div>
+
+<template id="wg-shell">
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="#top" aria-label="WeGame Resources">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="var(--brand)"/><path d="M19 33 L34 73 L50 45 L66 73 L81 33" fill="none" stroke="#fff" stroke-width="11" stroke-linejoin="miter" stroke-miterlimit="10" stroke-linecap="square"/><circle cx="50" cy="25" r="6.5" fill="var(--accent)"/></svg>
+        <span class="wordmark"><b>WE<span>GAME</span></b><small>RESOURCES</small></span>
+      </a>
+      <label class="search" for="q">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Cari nama, SKU, jenama atau platform…" autocomplete="off">
+      </label>
+      <div class="top-actions">
+        <button class="btn has-lbl" id="btn-admin" hidden title="Mod pengurusan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span class="lbl">Urus</span>
+        </button>
+        <button class="btn primary has-lbl" id="btn-quote" title="Senarai sebut harga">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1 2h3v14H5V6h3z"/><path d="M9 12h6M9 16h4"/></svg><span class="lbl">Sebut Harga</span><span class="badge" id="quote-count">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="intro">
+      <div class="wrap">
+        <div class="intro-grid">
+          <div>
+            <div class="eyebrow" id="intro-eyebrow">Katalog Borong</div>
+            <h1 id="intro-title">Bekalan gaming untuk <em>peruncit</em> &amp; <em>kedai repair</em>.</h1>
+            <p id="intro-sub"></p>
+          </div>
+          <div class="stats" id="stats"></div>
+        </div>
+        <div id="notice-slot"></div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <div class="wrap">
+        <div class="tabs" id="tabs" role="toolbar" aria-label="Kategori"></div>
+        <div class="filters">
+          <select class="select" id="f-platform" aria-label="Platform"></select>
+          <select class="select" id="f-brand" aria-label="Jenama"></select>
+          <select class="select" id="f-status" aria-label="Status stok">
+            <option value="">Semua status</option>
+            <option value="ok">Ada stok</option>
+            <option value="warn">Stok rendah</option>
+            <option value="info">Pra-tempah</option>
+            <option value="bad">Habis stok</option>
+          </select>
+          <select class="select" id="f-sort" aria-label="Susunan">
+            <option value="featured">Pilihan utama</option>
+            <option value="name">Nama A–Z</option>
+            <option value="price-asc">Harga: rendah → tinggi</option>
+            <option value="price-desc">Harga: tinggi → rendah</option>
+            <option value="stock">Stok terbanyak</option>
+          </select>
+          <span class="result-count num" id="result-count"></span>
+          <div class="seg" role="group" aria-label="Paparan">
+            <button id="v-grid" aria-pressed="true" title="Grid"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></button>
+            <button id="v-list" aria-pressed="false" title="Senarai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="catalogue">
+      <div class="wrap" id="results"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div>
+        <a class="brand" href="#top" aria-label="WeGame Resources">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="24" fill="var(--brand)"/><path d="M19 33 L34 73 L50 45 L66 73 L81 33" fill="none" stroke="#fff" stroke-width="11" stroke-linejoin="miter" stroke-miterlimit="10" stroke-linecap="square"/><circle cx="50" cy="25" r="6.5" fill="var(--accent)"/></svg>
+          <span class="wordmark"><b>WE<span>GAME</span></b><small>RESOURCES</small></span>
+        </a>
+        <p id="foot-about"></p>
+      </div>
+      <div>
+        <h4>Hubungi kami</h4>
+        <div id="foot-contact"></div>
+      </div>
+      <div>
+        <h4>Terma borong</h4>
+        <div id="foot-terms"></div>
+      </div>
+    </div>
+    <div class="legal"><div class="wrap"><span id="foot-copy"></span><span id="foot-updated" class="num"></span></div></div>
+  </footer>
+
+  <dialog id="dlg-product" aria-labelledby="pd-title"><div class="dlg" id="pd"></div></dialog>
+  <dialog id="dlg-quote" class="drawer" aria-labelledby="qt-title"><div class="dlg" id="qt"></div></dialog>
+  <dialog id="dlg-edit" aria-labelledby="ed-title"><form class="dlg" id="ed" novalidate></form></dialog>
+  <dialog id="dlg-settings" aria-labelledby="st-title"><form class="dlg" id="st" novalidate></form></dialog>
+  <dialog id="dlg-confirm" style="max-width:420px"><div class="dlg" id="cf"></div></dialog>
+  <div id="savebar-slot"></div>
+  <div class="toast" id="toast" hidden></div>
+</template>
+
+<script src="js/seed.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
