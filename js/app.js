@@ -170,7 +170,7 @@ function applyTheme(){
 /* ============ routing ============ */
 function readRoute(){
   const h = location.hash.replace(/^#/,"");
-  if(h==="inventori"){ ui.route = "inventory"; }
+  if(h==="inventori"){ ui.route = "inventory"; ls.set("wg-staff", true); }
   else { ui.route = "catalog"; }
   const m = h.match(/^produk-(.+)$/);
   renderAll();
@@ -503,7 +503,7 @@ function renderInventory(){
   const maxStock = Math.max(1, ...ps.map(p=>p.stock));
   $("#inv").innerHTML =
     '<div class="inv-head"><div><span class="eyebrow">Panel staf</span><h1>Inventori</h1><p>'+ps.length+' SKU · kemas kini terakhir '+fmtDate(s.updated)+'</p></div>'+
-      '<div class="acts"><button class="btn" data-act="settings">'+ICON.gear+'<span class="lbl">Tetapan syarikat</span></button><label class="btn" for="csv-in" style="cursor:pointer">'+ICON.upload+'<span class="lbl">Import CSV</span></label><input id="csv-in" type="file" accept=".csv,text/csv" hidden><button class="btn" data-act="copy-csv">'+ICON.copy+'<span class="lbl">Salin CSV</span></button><button class="btn primary" data-act="new">'+ICON.plus+'Tambah produk</button></div></div>'+
+      '<div class="acts"><button class="btn ghost" data-act="staff-off" type="button">Keluar mod staf</button><button class="btn" data-act="settings">'+ICON.gear+'<span class="lbl">Tetapan syarikat</span></button><label class="btn" for="csv-in" style="cursor:pointer">'+ICON.upload+'<span class="lbl">Import CSV</span></label><input id="csv-in" type="file" accept=".csv,text/csv" hidden><button class="btn" data-act="copy-csv">'+ICON.copy+'<span class="lbl">Salin CSV</span></button><button class="btn primary" data-act="new">'+ICON.plus+'Tambah produk</button></div></div>'+
     '<div class="notice info" style="margin-bottom:20px">'+ICON.info+'<span><b>Versi demo:</b> perubahan disimpan dalam pelayar ini sahaja (localStorage). Peranti lain tidak akan nampak sehingga sistem disambung ke pangkalan data.</span>'+
       '<div class="nacts">'+(s.sample?'<button class="btn sm" data-act="clear-sample">Buang data contoh</button>':'')+'<button class="btn sm ghost" data-act="reset-demo">'+ICON.reset+'Reset demo</button></div></div>'+
     '<div class="kpis">'+
@@ -682,6 +682,7 @@ function importCSV(file){
 
 /* ============ render all ============ */
 function renderAll(){
+  document.body.classList.toggle("is-staff", !!ls.get("wg-staff", false));
   renderHeader();
   if(ui.route==="catalog"){ renderHero(); renderNotice(); renderFilters(); renderResults(); }
   else { renderInventory(); }
@@ -735,6 +736,7 @@ document.addEventListener("click", e=>{
     case "inv-status": ui.inv.status = ui.inv.status===t.dataset.s && t.classList.contains("kpi") ? "" : t.dataset.s; renderInventory(); break;
     case "inv-sort": { const k = t.dataset.k; if(ui.inv.sort===k) ui.inv.dir *= -1; else { ui.inv.sort = k; ui.inv.dir = (k==="stock"||k==="value"||k==="price") ? -1 : 1; } renderInventory(); break; }
     case "settings": openSettings(); break;
+    case "staff-off": ls.set("wg-staff", false); location.hash = "katalog"; toast("Mod staf dimatikan pada peranti ini"); break;
     case "copy-csv": copyText(toCSV(), "CSV disalin. Tampal dalam Excel atau Google Sheets."); break;
     case "reset-demo": confirmBox("Reset data demo?", "Semua produk dan tetapan dalam pelayar ini akan dikembalikan kepada data contoh asal.", "Reset", ()=>persist(()=>Store.reset(), "Data demo dikembalikan"), true); break;
     case "clear-sample": confirmBox("Buang data contoh?", "Semua produk contoh akan dipadam supaya anda boleh masukkan inventori sebenar. Produk yang anda tambah sendiri kekal.", "Buang data contoh", ()=>{ const ids = data.products.filter(p=>/^p\d\d$/.test(p.id)).map(p=>p.id); persist(async ()=>{ const db = await Store.deleteProducts(ids); db.settings.sample = false; return Store.saveSettings(db.settings); }, "Data contoh dibuang"); }, true); break;
@@ -787,8 +789,21 @@ $$("dialog").forEach(d=>{
   });
 });
 window.addEventListener("hashchange", readRoute);
+/* phone: hide the header while scrolling down, bring it back on scroll up */
+(function(){
+  const mq = matchMedia("(max-width:900px)"); let lastY = window.scrollY, ticking = false;
+  window.addEventListener("scroll", ()=>{
+    if(ticking) return; ticking = true;
+    requestAnimationFrame(()=>{
+      const y = window.scrollY, bar = $(".topbar");
+      const hide = mq.matches && y > 200 && y > lastY + 4 && !document.querySelector("dialog[open]") && document.activeElement !== $("#q");
+      if(hide) bar.classList.add("hide"); else if(y < lastY - 4 || y < 200) bar.classList.remove("hide");
+      lastY = y; ticking = false;
+    });
+  }, {passive:true});
+})();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
-ls.set("wg-staff", true); // demo: staf boleh edit dari katalog. Ganti dengan semakan log masuk Supabase.
+/* Mod staf (demo): aktif selepas peranti ini membuka #inventori. Ganti dengan log masuk Supabase. */
 
 /* ============ boot ============ */
 applyTheme();

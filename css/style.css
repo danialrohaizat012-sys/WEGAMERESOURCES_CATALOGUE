@@ -508,3 +508,36 @@ details.preview summary{cursor:pointer;font-size:13px;font-weight:600;color:var(
   .shop{padding-block:16px 72px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+
+/* ---------- phone & tablet tuning ---------- */
+@media (max-width:900px){
+  .topbar{transition:transform .25s var(--ease)}
+  .topbar.hide{transform:translateY(calc(-100% - env(safe-area-inset-top,0px)))}
+  .hbtn{width:44px;height:44px;padding:0;justify-content:center}
+  .catnav .wrap{height:44px}
+}
+@media (max-width:900px) and (pointer:coarse){
+  input,select,textarea{font-size:16px!important}
+}
+@media (hover:none){
+  .card:hover{box-shadow:none;border-color:var(--line)}
+}
+@media (min-width:1600px){
+  .wrap{max-width:1520px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+}
+.utility .u-right{min-width:0}
+.utility #u-contact{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.notice:not(:has(.nacts)){flex-wrap:nowrap}
+.staff-only{display:none}
+.is-staff .staff-only{display:flex}
+.foot-staff{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:12.5px}
+.foot-staff:hover{color:var(--brand);text-decoration:underline}
+@media (max-width:640px){
+  .btn .lbl{display:none}
+  .tier{padding:9px 10px}
+  .tier b{font-size:15px;white-space:nowrap}
+  .tier small,.tier em{font-size:11px}
+  .dlg-head{padding:10px 12px 10px 16px}
+}
+@media (min-width:600px) and (max-width:1020px){.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}}
